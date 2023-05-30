@@ -6,23 +6,23 @@ use regex::Regex;
 
 pub const DEFAULT_OUT_FILE_NAME: &str = "output.out";
 pub const DEFAULT_NUMBER_OF_LINES: u16 = 1;
-pub const DEFAULT_NUMBER_OF_PREVIOUS_DAYS: u16 = 1;
+pub const DEFAULT_NUMBER_OF_PREVIOUS_DAYS: u16 = 0;
 
 
 #[derive(Parser,Debug)]
-#[command(author, version, about, long_about = None)]
+#[command(author = "hoanglinh", version="1.0.0", about, long_about = "Find path and content of file that matches by specifying the keywords")]
 pub struct Args{
 
-  #[arg(short = 'p', long = "path", value_name = "Path to Folder")]
+  #[arg(short = 'p', long = "path", value_name = "Path to input folder or file")]
   path: PathBuf,
   
-  #[arg(short = 'k', long ="keywords", value_name = "List of keywords" )]
+  #[arg(short = 'k', long ="keywords", value_name = "List of keywords separated by [, ; |]")]
   keywords: String,
 
   #[arg(short, long, value_name = "output file")]
   output: Option<String>,
 
-  #[arg(short = 'd', long = "previous-days", value_name = "Previous days")]
+  #[arg(short = 'd', long = "previous-days", value_name = "Number of Previous days")]
   number_of_previous_days : Option<u16>,
 
   #[arg(short = 'l', long = "number-lines", value_name = "Number of Lines")]
@@ -98,7 +98,7 @@ impl Args{
       return Err(String::from("Path is not valid"));
     }
     if self.get_keyword_list().len() <= 0 {
-      return Err(String::from("Keywords were not specified"));
+      return Err(String::from("Keywords are invalid"));
     }
     Ok(())
   }

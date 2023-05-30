@@ -1,4 +1,4 @@
-use std::{time::SystemTime, fs::File, io::Write};
+use std::{time::SystemTime, fs::File, io::{Write, BufWriter}};
 
 use chrono::{DateTime, Utc};
 
@@ -11,7 +11,7 @@ pub fn compare_time(sys_time: &SystemTime, chrono_time: &DateTime<Utc>)->bool{
   return if target > chrono_time.to_owned() {true} else{false};
 }
 
-pub fn write_output_to_file<T>(file : &mut File, target: &T)->Result<(), std::io::Error>
+pub fn write_output_to_file<T>(file : &mut BufWriter<File>, target: &T)->Result<(), std::io::Error>
 where T: Serializable{
   let string = target.serialize();
   let buffer = string.as_bytes();

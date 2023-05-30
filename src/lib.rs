@@ -2,9 +2,8 @@ pub mod command_parser;
 pub mod output_result;
 mod utils;
 pub mod service{
-  use std::{io::{self, BufReader, BufRead}, path::{Path, PathBuf}, error::Error, fs::{File, self}};
+  use std::{io::{self, BufReader, BufRead, BufWriter}, path::{Path, PathBuf}, error::Error, fs::{File, self}};
   use crate::{command_parser::Args, output_result::OutputResult, utils::{compare_time, write_output_to_file}};
-  
   
   pub fn find_error_file(args: Args)->Result<(), Box<dyn Error>>{
     if !(args.get_path().is_dir() || args.get_path().is_file()) {
@@ -13,9 +12,14 @@ pub mod service{
     let path = args.get_path();
     let mut output_results = Vec::<OutputResult>::new();
     handle_file_recursive(&path,&args, &mut output_results,&process_file);
-    let mut file_output = File::options().create(true).append(true).open(args.get_output_file())?;
+    if output_results.len() <= 0 {
+      println!("Not Found the keywords in the files");
+      return Ok(())
+    }
+    let file_output = File::options().create(true).write(true).open(args.get_output_file())?;
+    let mut file_buffer = BufWriter::new(file_output);
     for out_result in output_results{
-      write_output_to_file(&mut file_output, &out_result)?;
+      write_output_to_file(&mut file_buffer, &out_result)?;
     }
     Ok(())
   }
@@ -37,11 +41,10 @@ pub mod service{
     }
   }
   pub fn process_file(path: &PathBuf, config: &Args, output_results:&mut Vec<OutputResult>){
-    dbg!(path);
     if let Ok(file) = File::open(path) {
       if let Ok(meta_data) = &file.metadata(){
         let modified = meta_data.modified().unwrap();
-        if compare_time(&modified, config.get_from_date()) {
+        if config.get_previous_days() == 0|| compare_time(&modified, config.get_from_date()) {
           let buffer_reader = BufReader::new(file);
           let mut line_iter = buffer_reader.lines().into_iter();
           let mut line_number:u32 = 0;
@@ -52,6 +55,7 @@ pub mod service{
               line_number += 1;
               if let Some(regex) = config.get_regex(){
                 if regex.is_match(&line){
+                  println!("Found: {} in line {}", path.to_string_lossy(),line_number);
                   out_result.add_line_with_args(line_number, line);
                   for _ in 0..(config.get_number_of_lines()-1){
                     if let Some(Ok(next_line)) = line_iter.next(){
@@ -72,11 +76,5 @@ pub mod service{
         }
       }
     }
-  }
-}
-pub mod test{
-  #[test]
-  fn test_call_call(){
-    
   }
 }

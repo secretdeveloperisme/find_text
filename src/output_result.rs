@@ -44,7 +44,7 @@ impl Line {
 impl Serializable for Line {
    fn serialize(&self)->String{
       let mut result = String::new();
-      result += format!("{}:{}", self.get_number(), self.get_content()).as_str();
+      result += format!("{{{}}}:{}", self.get_number(), self.get_content()).as_str();
       return result;
    }
 }
@@ -88,7 +88,7 @@ impl Serializable for OutputResult {
       let mut result = String::new();
       result += format!("FileName: {}", self.get_name()).as_str();
       result += "\n";
-      result += format!("modified: {}", self.get_modified()).as_str();
+      result += format!("Modified: {}",self.get_modified().format("%Y-%m-%D %H:%M:%S").to_string()).as_str();
       result += "\n";
       for line in self.get_lines(){
         result += line.serialize().as_str();

@@ -5,13 +5,13 @@ fn main() {
   match Args::build() {
       Ok(args)=>{
         if let Err(err) = find_error_file(args){
-          println!("An error occurs: {}", err.to_string())
+          println!("An error occurs: {}", &err.to_string());
         }else {
           println!("Process finished successfully!");
         }
       },
       Err(err)=>{
-        println!("An error occurs: {}", err.to_string())
+        println!("An error occurs when build arguments: {}", err.to_string())
       }
   }
   
