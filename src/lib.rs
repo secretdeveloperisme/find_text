@@ -3,7 +3,7 @@ pub mod output_result;
 mod utils;
 pub mod service{
   use std::{io::{self, BufReader, BufRead, BufWriter}, path::{Path, PathBuf}, error::Error, fs::{File, self}};
-  use crate::{command_parser::Args, output_result::OutputResult, utils::{compare_time, write_output_to_file}};
+  use crate::{command_parser::Args, output_result::OutputResult, utils::{compare_time, write_output_to_file, get_match_strings}};
   
   pub fn find_error_file(args: Args)->Result<(), Box<dyn Error>>{
     if !(args.get_path().is_dir() || args.get_path().is_file()) {
@@ -54,8 +54,9 @@ pub mod service{
             if let Some(Ok(line)) = line_iter.next() {
               line_number += 1;
               if let Some(regex) = config.get_regex(){
-                if regex.is_match(&line){
+                if let Some(match_str) = get_match_strings(&regex, &line){
                   println!("Found: {} in line {}", path.to_string_lossy(),line_number);
+                  println!("Text: {}", match_str);
                   out_result.add_line_with_args(line_number, line);
                   for _ in 0..(config.get_number_of_lines()-1){
                     if let Some(Ok(next_line)) = line_iter.next(){

@@ -1,6 +1,7 @@
 use std::{time::SystemTime, fs::File, io::{Write, BufWriter}};
 
 use chrono::{DateTime, Utc};
+use regex::Regex;
 
 pub trait Serializable : Sized{
   fn serialize(&self)->String;
@@ -19,4 +20,17 @@ where T: Serializable{
     return Ok(());
   }
   return Err(std::io::Error::new(std::io::ErrorKind::WriteZero, "Cannot write to file "));
+}
+
+pub fn get_match_strings(regex: &Regex, text:&str)->Option<String>{
+  let mut result = String::new();
+  for captures in regex.captures_iter(text){
+    for match_op in captures.iter() {
+        if let Some(matcher) = match_op{
+          result.push_str(" ");
+          result.push_str(matcher.as_str());
+        }
+    }
+  }
+  return if result.len() > 0 {Some(result)}else{None};
 }

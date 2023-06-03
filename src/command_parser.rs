@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, fs};
 use chrono::{DateTime, Utc, Days};
 use clap::Parser;
 use regex::Regex;
@@ -28,6 +28,9 @@ pub struct Args{
   #[arg(short = 'l', long = "number-lines", value_name = "Number of Lines")]
   number_of_lines : Option<u16>,
 
+  #[arg(short = 'i', long = "ignore-case", value_name = "Ignore case" )]
+  ignore_case: bool,
+  
   #[clap(skip)]
   keywords_list:Vec<String>,
 
@@ -54,11 +57,16 @@ impl Args{
   pub fn get_keyword_list(&self)->&Vec<String>{
     return &self.keywords_list;
   }
+  pub fn build_path(&mut self){
+   
+  }
   pub fn build_keywords(&mut self, keyword: String){
     self.keywords_list = keyword.split(&[';',',','|']).map(|value|{
       value.to_string()
     }).collect(); 
-    if let Ok(regex) = Regex::new(self.keywords_list.join("|").as_str()){
+    
+    let ignore_case_flag = if self.is_ignore_case(){"(?i)"}else{""};
+    if let Ok(regex) = Regex::new(format!("{}{}",ignore_case_flag,self.keywords_list.join("|")).as_str()){
       self.regex = Some(regex);
     }else{
       self.regex = None;
@@ -86,9 +94,14 @@ impl Args{
       DEFAULT_NUMBER_OF_LINES
     }
   }
+  pub fn is_ignore_case(&self)->bool{
+    self.ignore_case
+  }
+
   pub fn get_regex(&self)->&Option<Regex>{
     &self.regex
   }
+  
 
   pub fn check(&self)->Result<(), String>{
     if self.keywords.is_empty(){
@@ -105,6 +118,9 @@ impl Args{
   
   pub fn build() ->Result<Self,String> {
     let mut args = Self::parse();
+    if args.path.is_relative(){
+      args.path = fs::canonicalize(args.path.clone()).unwrap();
+    }
     let string = args.get_keyword();
     args.build_keywords(string.clone());
     args.build_from_date();
